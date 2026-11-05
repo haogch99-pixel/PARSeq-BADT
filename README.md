@@ -30,6 +30,14 @@ PARSeq-BADT/
 
 Python 3.9 or newer and PyTorch 2.0 or newer are required. The pinned CPU requirements are suitable for reproducing the code path; install a CUDA build of PyTorch separately when needed.
 
+The checkpoint is stored with Git LFS. Install Git LFS before cloning so that the checkpoint is downloaded instead of only its small pointer file:
+
+```bash
+git lfs install
+git clone https://github.com/haogch99-pixel/PARSeq-BADT.git
+cd PARSeq-BADT
+```
+
 ```bash
 python -m pip install -r requirements/core.txt
 python -m pip install -r requirements/train.txt -r requirements/test.txt
@@ -38,7 +46,11 @@ python -m pip install -e .
 
 ## Pretrained inference
 
-Download or clone this repository with `checkpoints/badt_vit8_best.ckpt` in place. The checkpoint is loaded directly by `test.py`:
+After cloning with Git LFS, `checkpoints/badt_vit8_best.ckpt` is available locally and is loaded directly by `test.py`. If the repository was cloned before Git LFS was installed, run `git lfs pull` first:
+
+```bash
+git lfs pull
+```
 
 ```bash
 python test.py checkpoints/badt_vit8_best.ckpt \
@@ -95,3 +107,4 @@ The CSV files contain per-dataset accuracy, normalized edit distance, confidence
 ## License and attribution
 
 The PARSeq source is retained because BADT builds on it. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for the applicable notices and attribution.
+
