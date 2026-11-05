@@ -1,0 +1,38 @@
+name: parseq-badt-vit8
+_target_: strhub.models.parseq_badt.system.PARSeq
+
+# Data
+patch_size: [4, 8]
+
+# Architecture
+embed_dim: 384
+enc_num_heads: 6
+enc_mlp_ratio: 4
+enc_depth: 12
+dec_num_heads: 12
+dec_mlp_ratio: 4
+dec_depth: 1
+
+# Base training
+lr: 7e-4
+perm_num: 6
+perm_forward: true
+perm_mirrored: true
+dropout: 0.1
+
+# BADT
+badt_degradation_prob: 0.60
+badt_max_ops: 2
+badt_consistency_weight: 0.15
+badt_confidence_threshold: 0.75
+badt_temperature: 1.0
+badt_require_teacher_correct: true
+badt_lowres_min_scale: 0.35
+badt_lowres_max_scale: 0.75
+badt_boundary_max_ratio: 0.04
+badt_boundary_token_ratio: 0.10
+badt_boundary_token_drop_prob: 0.15
+
+# Decoding
+decode_ar: true
+refine_iters: 1

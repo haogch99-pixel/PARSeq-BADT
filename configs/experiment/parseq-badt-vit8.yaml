@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - override /model: parseq_badt_vit8
+
+model:
+  name: parseq-badt-vit8
+  enc_depth: 8
