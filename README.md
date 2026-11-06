@@ -1,50 +1,42 @@
-<div align="center">
-
 # PARSeq-BADT
 
-### Boundary-Aware Degradation Training for Scene Text Recognition
+A compact, reproducible release of the Boundary-Aware Degradation Training (BADT) variant of PARSeq with a ViT-8 encoder.
 
-[Method](#method) · [Models and Results](#models-and-results) · [Installation](#installation) · [Dataset Preparation](#dataset-preparation) · [Evaluation](#evaluation) · [Training](#training)
+This repository intentionally publishes only the BADT ViT8 implementation, its training configuration, one best checkpoint, and the corresponding benchmark summaries. It does not include ViT12 checkpoints, ablation implementations or weights, baseline weights, or datasets.
 
-</div>
+## Repository layout
 
-BADT (Boundary-Aware Degradation Training) is a training method for scene text recognition built on [PARSeq](https://github.com/baudm/parseq). It combines dual-view supervision, boundary feature perturbation, and gated consistency learning to recognize text affected by blur, low resolution, and boundary clutter. Inference uses a single PARSeq forward path.
-
-<p align="center">
-  <img src="docs/assets/badt_overview_color.png" alt="BADT overview" width="900">
-</p>
-
-## Method
-
-- **Dual-view training:** The base and degraded views are processed by the same PARSeq model with shared parameters. Both views are supervised with ground-truth labels.
-- **Boundary-aware perturbation:** Image degradations are combined with random zeroing of visual tokens along the left and right boundaries in the degraded branch.
-- **Gated consistency learning:** Correct predictions from the base branch that meet a confidence threshold guide the degraded branch through KL divergence. Gradients are stopped through the reference targets.
-
-## Models and Results
-
-| Model | Encoder | Input Size | Download |
-| :--- | :---: | :---: | :---: |
-| BADT | ViT8 | 32 × 128 | [badt_vit8_best.ckpt](https://github.com/haogch99-pixel/PARSeq-BADT/blob/main/checkpoints/badt_vit8_best.ckpt) |
-
-### Benchmark Results
-
-| Protocol | Samples | Accuracy (%) | 1 − NED (%) |
-| :--- | ---: | ---: | ---: |
-| Subset | 7,248 | **96.29** | **98.95** |
-| Full | 7,672 | **95.74** | **98.70** |
+```text
+PARSeq-BADT/
+├── train.py
+├── test.py
+├── strhub/
+│   ├── data/
+│   └── models/
+│       ├── parseq/          # Public PARSeq dependency
+│       └── parseq_badt/     # BADT ViT8 implementation
+├── configs/
+│   ├── main.yaml
+│   ├── charset/94_full.yaml
+│   ├── dataset/
+│   ├── model/parseq_badt_vit8.yaml
+│   └── experiment/parseq-badt-vit8.yaml
+├── checkpoints/badt_vit8_best.ckpt
+├── results/subset.csv
+└── results/full.csv
+```
 
 ## Installation
 
-Use Python 3.10. Install [Git LFS](https://git-lfs.com/) before cloning the repository and downloading the model:
+Python 3.9 or newer and PyTorch 2.0 or newer are required. The pinned CPU requirements are suitable for reproducing the code path; install a CUDA build of PyTorch separately when needed.
+
+The checkpoint is stored with Git LFS. Install Git LFS before cloning so that the checkpoint is downloaded instead of only its small pointer file:
 
 ```bash
 git lfs install
 git clone https://github.com/haogch99-pixel/PARSeq-BADT.git
 cd PARSeq-BADT
-git lfs pull
 ```
-
-Install the dependencies:
 
 ```bash
 python -m pip install -r requirements/core.txt
@@ -52,61 +44,13 @@ python -m pip install -r requirements/train.txt -r requirements/test.txt
 python -m pip install -e .
 ```
 
-The requirements install the CPU build of PyTorch by default. For an NVIDIA GPU, switch to the CUDA 12.1 build:
+## Pretrained inference
+
+After cloning with Git LFS, `checkpoints/badt_vit8_best.ckpt` is available locally and is loaded directly by `test.py`. If the repository was cloned before Git LFS was installed, run `git lfs pull` first:
 
 ```bash
-python -m pip install torch==2.2.1+cu121 torchvision==0.17.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+git lfs pull
 ```
-
-For other platforms, see the [PyTorch installation instructions](https://pytorch.org/get-started/previous-versions/#v221).
-
-## Dataset Preparation
-
-**Download: [Baidu Netdisk](https://pan.baidu.com/s/17zaFLCDms0-8uzSZ2jqnFQ?pwd=c7qs) · Access code: `c7qs`**
-
-The dataset archives are organized as shown below:
-
-<p align="center">
-  <img src="docs/assets/dataset_archives.png" alt="Dataset archives" width="900">
-</p>
-
-Extract the LMDB datasets into `data/` at the repository root. Each leaf dataset directory should contain a `data.mdb` file.
-
-```text
-data/
-├── train/
-│   └── real/
-│       ├── ArT/
-│       ├── COCOv2.0/
-│       ├── LSVT/
-│       ├── MLT19/
-│       ├── OpenVINO/
-│       │   ├── train_1/
-│       │   ├── train_2/
-│       │   ├── train_5/
-│       │   ├── train_f/
-│       │   └── validation/
-│       ├── RCTW17/
-│       ├── ReCTS/
-│       ├── TextOCR/
-│       └── Uber/
-├── val/
-│   ├── IC13/
-│   ├── IC15/
-│   ├── IIIT5k/
-│   └── SVT/
-└── test/
-    ├── CUTE80/
-    ├── IC13_857/
-    ├── IC13_1015/
-    ├── IC15_1811/
-    ├── IC15_2077/
-    ├── IIIT5k/
-    ├── SVT/
-    └── SVTP/
-```
-
-## Evaluation
 
 ```bash
 python test.py checkpoints/badt_vit8_best.ckpt \
@@ -115,9 +59,18 @@ python test.py checkpoints/badt_vit8_best.ckpt \
   --output_dir results
 ```
 
-For CPU evaluation, replace `--device cuda` with `--device cpu`. Evaluation uses lowercase alphanumeric characters by default. Add `--cased --punctuation` for case-sensitive evaluation with punctuation.
+Use `--device cpu` for CPU inference. By default, evaluation follows the repository's lowercase-alphanumeric comparison protocol. Add `--cased --punctuation` when evaluating case-sensitive, punctuation-preserving labels.
 
-## Training
+The command evaluates both benchmark protocols and writes:
+
+- `results/subset.csv`: IIIT5k, SVT, IC13_857, IC15_1811, SVTP, CUTE80.
+- `results/full.csv`: IIIT5k, SVT, IC13_1015, IC15_2077, SVTP, CUTE80.
+
+## Reproducing training
+
+The public training data are not redistributed. Download and preprocess the same LMDB datasets described in [Datasets.md](Datasets.md), placing them below `data/`.
+
+To run the formal BADT ViT8 experiment:
 
 ```bash
 python train.py +experiment=parseq-badt-vit8 \
@@ -125,4 +78,33 @@ python train.py +experiment=parseq-badt-vit8 \
   trainer.accelerator=gpu \
   trainer.devices=1
 ```
+
+For a CPU smoke run, override the trainer and batch size:
+
+```bash
+python train.py +experiment=parseq-badt-vit8 \
+  data.root_dir=data \
+  trainer.accelerator=cpu \
+  trainer.devices=1 \
+  trainer.precision=32-true \
+  model.batch_size=16 \
+  data.num_workers=2
+```
+
+The exact model and BADT hyperparameters are in [configs/model/parseq_badt_vit8.yaml](configs/model/parseq_badt_vit8.yaml); the formal experiment selector is [configs/experiment/parseq-badt-vit8.yaml](configs/experiment/parseq-badt-vit8.yaml).
+
+## Reported results
+
+The included checkpoint was selected from the formal ViT8 BADT run by validation accuracy. The checked-in summaries are:
+
+| Protocol | Samples | Accuracy | 1 - NED |
+|---|---:|---:|---:|
+| Subset | 7,248 | 96.29 | 98.95 |
+| Full | 7,672 | 95.74 | 98.70 |
+
+The CSV files contain per-dataset accuracy, normalized edit distance, confidence, and mean predicted label length.
+
+## License and attribution
+
+The PARSeq source is retained because BADT builds on it. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for the applicable notices and attribution.
 
