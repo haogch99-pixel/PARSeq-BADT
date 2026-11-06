@@ -64,12 +64,6 @@ For other platforms, see the [PyTorch installation instructions](https://pytorch
 
 **Download: [Baidu Netdisk](https://pan.baidu.com/s/17zaFLCDms0-8uzSZ2jqnFQ?pwd=c7qs) · Access code: `c7qs`**
 
-The dataset archives are organized as shown below:
-
-<p align="center">
-  <img src="docs/assets/dataset_archives.png" alt="Dataset archives" width="900">
-</p>
-
 Extract the LMDB datasets into `data/` at the repository root. Each leaf dataset directory should contain a `data.mdb` file.
 
 ```text
